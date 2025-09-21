@@ -1,0 +1,233 @@
+# 1 "/root/Bela/projects/Thesis/Filters.cpp"
+# 1 "<built-in>" 1
+# 1 "<built-in>" 3
+# 365 "<built-in>" 3
+# 1 "<command line>" 1
+# 1 "<built-in>" 2
+# 1 "/root/Bela/projects/Thesis/Filters.cpp" 2
+# 1 "./libraries/Biquad/Biquad.h" 1
+# 21 "./libraries/Biquad/Biquad.h"
+class BiquadCoeff
+{
+public:
+ typedef enum
+ {
+  lowpass,
+  highpass,
+  bandpass,
+  notch,
+  peak,
+  lowshelf,
+  highshelf
+ } Type;
+ struct Settings {
+  double fs;
+  Type type;
+  double cutoff;
+  double q;
+  double peakGainDb;
+ };
+};
+
+
+
+
+template <typename T>
+class BiquadCoeffT : public BiquadCoeff
+{
+public:
+ typedef T sample_t;
+ BiquadCoeffT() {}
+ BiquadCoeffT(const Settings& settings) { setup(settings); }
+ int setup(const Settings& settings)
+ {
+  type = settings.type;
+  Fs = settings.fs;
+  Fc = settings.cutoff / Fs;
+  Q = settings.q;
+  peakGain = settings.peakGainDb;
+  calc();
+  return 0;
+ }
+
+ void setType(Type type) {
+  this->type = type;
+  calc();
+ }
+ void setQ(sample_t Q) {
+  this->Q = Q;
+  calc();
+ }
+ void setFc(sample_t Fc) {
+  this->Fc = Fc/this->Fs;
+  calc();
+ }
+ void setPeakGain(sample_t peakGainDB) {
+  this->peakGain = peakGainDB;
+  calc();
+ }
+
+ Type getType() { return type; }
+ sample_t getQ() { return Q; }
+ sample_t getFc() { return Fc; }
+ sample_t getPeakGain() { return peakGain; }
+
+ sample_t a0, a1, a2, b1, b2;
+private:
+ sample_t Fc, Q, peakGain;
+ sample_t Fs;
+ Type type;
+ void calc(void);
+};
+
+
+
+
+
+
+class Biquad : public BiquadCoeffT<double> {
+public:
+ Biquad() {};
+ Biquad(const Settings& s) {
+  setup(s);
+ }
+
+
+
+ sample_t process(sample_t in)
+ {
+  sample_t out = in * a0 + z1;
+  z1 = in * a1 + z2 - b1 * out;
+  z2 = in * a2 - b2 * out;
+  return out;
+ }
+
+
+
+
+ void clean()
+ {
+  z1 = z2 = 0.0;
+ }
+protected:
+ sample_t z1 = 0;
+ sample_t z2 = 0;
+};
+extern template class BiquadCoeffT<double>;
+# 2 "/root/Bela/projects/Thesis/Filters.cpp" 2
+
+
+
+
+
+
+
+
+Biquad bandpassL;
+Biquad bandpassR;
+Biquad lowpassL;
+Biquad lowpassR;
+Biquad highpassL;
+Biquad highpassR;
+
+float bpCutoff = 500;
+float gFilterQ = 1.0;
+float kSampleRate = 44100;
+
+float lpCutoff = 2000;
+float hpCutoff = 100;
+
+
+bool initialize_filters() {
+
+
+ Biquad::Settings BPsettings{
+   .fs = kSampleRate,
+   .cutoff = bpCutoff,
+   .type = Biquad::bandpass,
+   .q = gFilterQ,
+   .peakGainDb = 7,
+   };
+
+ bandpassL.setup(BPsettings);
+ BPsettings.cutoff = bpCutoff;
+
+ bandpassR.setup(BPsettings);
+ BPsettings.cutoff = bpCutoff;
+
+
+ Biquad::Settings LPsettings{
+   .fs = kSampleRate,
+   .cutoff = lpCutoff,
+   .type = Biquad::lowpass,
+
+   .peakGainDb = 7,
+   };
+
+ lowpassL.setup(LPsettings);
+ LPsettings.cutoff = lpCutoff;
+
+ lowpassR.setup(LPsettings);
+ LPsettings.cutoff = lpCutoff;
+
+
+ Biquad::Settings HPsettings{
+   .fs = kSampleRate,
+   .cutoff = hpCutoff,
+   .type = Biquad::highpass,
+
+   .peakGainDb = 7,
+   };
+
+ highpassL.setup(HPsettings);
+ HPsettings.cutoff = hpCutoff;
+
+ highpassR.setup(HPsettings);
+ HPsettings.cutoff = hpCutoff;
+
+ return true;
+}
+
+void render_bandpass(float audio_l, float audio_r) {
+
+
+  bandpassL.setFc(bpCutoff);
+  audio_l = bandpassL.process(audio_l);
+
+  bandpassR.setFc(bpCutoff);
+  audio_r = bandpassR.process(audio_r);
+}
+
+void render_lowpass(float audio_l, float audio_r) {
+
+
+  lowpassL.setFc(lpCutoff);
+  audio_l = lowpassL.process(audio_l);
+
+  lowpassR.setFc(lpCutoff);
+  audio_r = lowpassR.process(audio_r);
+}
+
+void render_highpass(float audio_l, float audio_r) {
+
+
+  highpassL.setFc(hpCutoff);
+  audio_l = highpassL.process(audio_l);
+
+  highpassR.setFc(hpCutoff);
+  audio_r = highpassR.process(audio_r);
+}
+
+void render_lowandhighpass(float audio_l, float audio_r) {
+
+
+  highpassL.setFc(hpCutoff);
+  lowpassL.setFc(lpCutoff);
+  audio_l = highpassL.process(audio_l);
+  audio_l = lowpassL.process(audio_l);
+
+  highpassR.setFc(hpCutoff);
+  lowpassL.setFc(lpCutoff);
+  audio_r = highpassR.process(audio_r);
+  audio_r = lowpassR.process(audio_r);
+}
