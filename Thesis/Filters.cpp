@@ -72,7 +72,7 @@ bool initialize_filters() {
 	return true;
 }
 
-void render_bandpass(float audio_l, float audio_r) {
+void render_bandpass(float audio_l, float audio_r, float cutoff) {
 	
 	//biquad goes here
 		bandpassL.setFc(bpCutoff);
@@ -82,7 +82,7 @@ void render_bandpass(float audio_l, float audio_r) {
 		audio_r = bandpassR.process(audio_r);
 }
 
-void render_lowpass(float audio_l, float audio_r) {
+void render_lowpass(float audio_l, float audio_r, float cutoff) {
 	
 	//biquad goes here
 		lowpassL.setFc(lpCutoff);
@@ -92,7 +92,7 @@ void render_lowpass(float audio_l, float audio_r) {
 		audio_r = lowpassR.process(audio_r);
 }
 
-void render_highpass(float audio_l, float audio_r) {
+void render_highpass(float audio_l, float audio_r, float cutoff) {
 	
 	//biquad goes here
 		highpassL.setFc(hpCutoff);
@@ -102,7 +102,9 @@ void render_highpass(float audio_l, float audio_r) {
 		audio_r = highpassR.process(audio_r);
 }
 
-void render_lowandhighpass(float audio_l, float audio_r) {
+void render_lowandhighpass(float audio_l, float audio_r, float Hicutoff, float LoCutoff) {
+	hpCutoff = HiCutoff;
+	lpCutoff = LoCutoff
 	
 	//biquad goes here
 		highpassL.setFc(hpCutoff);
