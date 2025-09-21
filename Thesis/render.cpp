@@ -1,12 +1,5 @@
 //my main device file
 
-//TODO next
-//use fft-multiple-effects as a testing file 
-//Find a threshold I like and set it static in this file --> 90 = cutoff high, 15 --> cutoff low when mapped 0, .002, 0, 1
-//use bandpass filter to make clearer, try using the same algorithm for finding the peak frequency
-//as I did in the pitch shift smoother
-//modify record function to be longer and start 10 seconds after boot
-
 #include <Bela.h>
 #include <cmath>
 #include "EnvironmentCalculations.h"
@@ -16,6 +9,7 @@
 #include "SourceSeparation.h"
 #include <RecordWav.h>
 #include <algorithm>
+#include "Filters.h"
 
 
 //volume knob
@@ -142,47 +136,32 @@ void render(BelaContext *context, void *userData)
 		}
 		
 		//Split foreground/background
-		//render_SS_Fft(out_l, out_r);
+		render_SS_Fft(out_l, out_r, humidity);
 		
 		//Delay function
-		delay(out_l, out_r);
+		delay(streamOne_l, streamOne_r);
 	    out_l += gDelayBuffer_l[(gDelayBufWritePtr-gDelayInSamples+DELAY_BUFFER_SIZE)%DELAY_BUFFER_SIZE] * gDelayAmount;
 	    out_r += gDelayBuffer_r[(gDelayBufWritePtr-gDelayInSamples+DELAY_BUFFER_SIZE)%DELAY_BUFFER_SIZE] * gDelayAmount;
 		
 		
 		//pitch shift function
-		//pitchShift(ambientLight, streamOne_l, streamOne_r, shifted_l, shifted_r);
+		pitchShift(ambientLight, streamTwo_l, streamTwo_r, shifted_l, shifted_r);
 		
-		
-		//make louder (actually fix this later)
-		streamTwo_l *= 3;
-		streamTwo_r *= 3;
-		//streamOne_l *= 3;
-		//streamOne_r *= 3;
-		shifted_l *= 4;
-		shifted_r *= 4;
-		
-		
+		//optional record wav file
 		record_quad(streamOne_l, streamTwo_l, streamOne_r, streamTwo_r);
 		
 		
 		// Write the audio to the output
 		audioWrite(context, n, 0, shifted_l);
-		//audioWrite(context, n, 0, streamOne_l);
-		audioWrite(context, n, 0, streamTwo_l);
+		audioWrite(context, n, 0, streamOne_l);
 		audioWrite(context, n, 1, shifted_r);
-		//audioWrite(context, n, 1, streamOne_r);
-		audioWrite(context, n, 1, streamTwo_r);
-		audioWrite(context, n, 0, out_l);
-		audioWrite(context, n, 1, out_r);
+		audioWrite(context, n, 1, streamOne_r);
 	}	
 }
 
 // Auxiliary task to read the I2C board
 void readAudioFunctions(void*)
 {
-	//Bela_setPgaGain(gInputGain, -1);
-	//Bela_setHeadphoneLevel(gOutputGain);
 	Bela_setAudioInputGain(-1, gInputGain);
 	Bela_setHpLevel	(-1, gOutputGain);
 }
