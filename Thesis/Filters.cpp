@@ -1,10 +1,5 @@
 #include <libraries/Biquad/Biquad.h>
 
-//I'd like this to run at the frequency with the highest amplitude in each stream.
-//ok so i thibk i have to call this function in proceess_fft() and actually, it may be the key to
-//making my source separation cleaner.
-//do this after I get the gui working/replace it
-
 
 //Biquad
 Biquad bandpassL;
