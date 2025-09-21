@@ -86,7 +86,7 @@ float DimIndoorsAdj(float value) {
 	return pitchFactorCompensated;
 }
 
-void delay(float audio_l, float audio_r, std::optional<float> sensor = std::nullopt)
+void delay(float audio_l, float audio_r, float sensor)
 {
 	
     gDelayFeedbackAmount = map(sensor, 0, 70, .7, .999);
@@ -95,13 +95,11 @@ void delay(float audio_l, float audio_r, std::optional<float> sensor = std::null
     if(++gDelayBufWritePtr>DELAY_BUFFER_SIZE)
         gDelayBufWritePtr = 0;
 
-    // Calculate the sample that will be written into the delay buffer...
+    // Calculate the sample that will be written into the delay buffer
     // 1. Multiply the current (dry) sample by the pre-delay gain level (set above)
     // 2. Get the previously delayed sample from the buffer, multiply it by the feedback gain and add it to the current sample
     float del_input_l = (gDelayAmountPre * audio_l + gDelayBuffer_l[(gDelayBufWritePtr-gDelayInSamples+DELAY_BUFFER_SIZE)%DELAY_BUFFER_SIZE] * gDelayFeedbackAmount);
     float del_input_r = (gDelayAmountPre * audio_r + gDelayBuffer_r[(gDelayBufWritePtr-gDelayInSamples+DELAY_BUFFER_SIZE)%DELAY_BUFFER_SIZE] * gDelayFeedbackAmount);
-
-    // ...but let's not write it into the buffer yet! First we need to apply the low-pass filter!
 
     // Remember these values so that we can update the filter later, as we're about to overwrite it
     float temp_x_l = del_input_l;
@@ -140,11 +138,13 @@ void delay(float audio_l, float audio_r, std::optional<float> sensor = std::null
 		
 	}
 	
-void pitchShift(float sensor, float audio_l, float audio_r, float &outputL, float &outputR) {
+void pitchShift(float audio_l, float audio_r, float &outputL, float &outputR, float sensor) {
 	        
-	    pitchFactor = map(sensor, 0.0, 1.0, .5, 1.5);
-    	//finalPitch = roundValue(pitchFactor);
-		//finalPitch = BrightIndoorsAdj(pitchFactor);
+	   if (sensor != -1) { 
+		pitchFactor = map(sensor, 0.0, 1.0, .5, 1.5);
+	   	} else {
+		pitchFactor = 1;
+    	
 		finalPitch = DimIndoorsAdj(pitchFactor);
         
         bufferL[writeIndexL] = audio_l;
