@@ -9,6 +9,12 @@ bool initialize_SS();
 extern Gui gGui;
 extern GuiController gGuiController;
 
+extern float amplitude;
+extern float ssCutoffNear;
+extern float ssCutoffFar;
+extern float ssGainNear;
+extern float ssGainFar;
+
 extern float streamOne_l;
 extern float streamTwo_l;
 extern float streamOne_r;
