@@ -6,7 +6,6 @@
 #include "BME280I2C.h"
 #include "BME280.h"
 #include <cmath>
-#include "EnvironmentCalculations.h"
 #include <libraries/OnePole/OnePole.h>
 #include "SensorRead.h"
 
@@ -43,19 +42,7 @@ bool initialize_sensors(BelaContext *context)
 	}
 	
 	i2cBMETask = Bela_createAuxiliaryTask(readBME280, 80, "bela-bme280");
-	/*
-	// Check if analog channels are enabled
-	if(context->analogFrames == 0 || context->analogFrames > context->audioFrames) {
-		rt_printf("Error: analog channels disabled\n");
-		return false;
-	}
 
-	// Useful calculations
-	if(context->analogFrames)
-		gAudioFramesPerAnalogFrame = context->audioFrames / context->analogFrames;
-	gInverseSampleRate = 1.0 / context->audioSampleRate;
-	gPhase = 0.0;
-	*/
 	//onepole setup
 	sensorFilter.setup(1, context->audioSampleRate);
 	
