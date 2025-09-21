@@ -1,4 +1,5 @@
 //my main device file
+//takes in binaural audio and environmental sensor data and modifies the audio in realtime based on environmental conditions.
 
 #include <Bela.h>
 #include <cmath>
@@ -145,7 +146,7 @@ void render(BelaContext *context, void *userData)
 		
 		
 		//pitch shift function
-		pitchShift(ambientLight, streamTwo_l, streamTwo_r, shifted_l, shifted_r);
+		pitchShift(streamTwo_l, streamTwo_r, shifted_l, shifted_r, ambientLight);
 		
 		//optional record wav file
 		record_quad(streamOne_l, streamTwo_l, streamOne_r, streamTwo_r);
